@@ -1,249 +1,1226 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AniStream</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.7/hls.min.js"></script>
-    
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AniStream</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.7/hls.min.js"></script>
+<style>
+:root {
+  --bg:          #0d0d0f;
+  --bg-card:     #1a1a1f;
+  --bg-sidebar:  #0a0a0c;
+  --accent:      #8b6ef5;
+  --accent-h:    #b39ef8;
+  --accent-dim:  rgba(139,110,245,0.15);
+  --surface:     rgba(255,255,255,0.04);
+  --surface-h:   rgba(255,255,255,0.06);
+  --border:      rgba(255,255,255,0.07);
+  --text-1:      #ffffff;
+  --text-2:      rgba(255,255,255,0.70);
+  --text-3:      rgba(255,255,255,0.40);
+  --success:     #4ade80;
+  --success-dim: rgba(74,222,128,0.10);
+  --danger:      #f87171;
+  --warn:        #fbbf24;
+  --r-sm:        8px;
+  --r-md:        12px;
+  --r-lg:        16px;
+  --r-xl:        24px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text-2);font-family:'Inter',system-ui,sans-serif;min-height:100vh;overflow-x:hidden}
+a{text-decoration:none;color:inherit}
+button{cursor:pointer;font-family:inherit;border:none;outline:none}
+img{display:block}
+input,select{font-family:inherit;outline:none}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}
+::-webkit-scrollbar-thumb:hover{background:var(--text-3)}
+
+/* ── HEADER ── */
+.header{position:sticky;top:0;z-index:200;background:rgba(10,10,12,.95);backdrop-filter:blur(10px);border-bottom:1px solid var(--border);height:64px;}
+.header-inner{max-width:1300px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:100%;padding:0 1.5rem;gap:1.5rem;}
+.logo{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:800;letter-spacing:-.5px;color:var(--text-1);cursor:pointer;}
+.logo-dot{width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent);}
+.search-wrap{position:relative;flex:1;max-width:400px}
+.search-wrap input{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text-1);border-radius:20px;padding:9px 16px 9px 42px;font-size:14px;transition:all .2s;}
+.search-wrap input:focus{border-color:var(--accent);background:var(--bg-card);box-shadow:0 0 0 3px var(--accent-dim)}
+.search-wrap input::placeholder{color:var(--text-3)}
+.search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text-3);pointer-events:none;}
+.search-results{position:absolute;top:calc(100% + 8px);left:0;right:0;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;box-shadow:0 20px 40px rgba(0,0,0,.8);display:none;z-index:300;max-height:420px;overflow-y:auto;}
+.search-results.open{display:block}
+.search-result-item{display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer;transition:background .15s;border-bottom:1px solid var(--border);}
+.search-result-item:last-child{border-bottom:none}
+.search-result-item:hover{background:var(--surface)}
+.search-result-img{width:42px;height:60px;border-radius:6px;object-fit:cover;flex-shrink:0;background:var(--surface)}
+.search-result-title{color:var(--text-1);font-size:14px;font-weight:600;line-height:1.3;margin-bottom:4px}
+.search-result-sub{color:var(--text-3);font-size:12px;}
+
+.header-right{display:flex;align-items:center;gap:10px}
+.btn-icon{background:var(--surface);border:1px solid var(--border);color:var(--text-1);padding:8px 14px;border-radius:20px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;transition:all .2s;display:flex;align-items:center;gap:8px;cursor:pointer;}
+.btn-icon:hover{background:var(--surface-h);border-color:var(--accent)}
+.btn-icon.ai-btn{background:var(--accent-dim);border-color:var(--accent);color:var(--accent-h)}
+.btn-icon.ai-btn:hover{background:var(--accent);color:#fff}
+.notif-bell-wrap{position:relative;display:flex;}
+.notif-dot{position:absolute;top:4px;right:8px;width:8px;height:8px;background:var(--danger);border-radius:50%;box-shadow:0 0 6px var(--danger);display:none;}
+
+/* ── MODALS ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;display:none;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(4px);}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);width:100%;max-width:500px;padding:32px;animation:fadeUp .25s ease;max-height:90vh;overflow-y:auto;}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;border-bottom:1px solid var(--border);padding-bottom:16px;}
+.modal-title{color:var(--text-1);font-size:20px;font-weight:800}
+.modal-close{width:36px;height:36px;border-radius:50%;background:var(--surface);border:none;color:var(--text-2);display:flex;align-items:center;justify-content:center;transition:all .2s;font-size:16px;}
+.modal-close:hover{background:var(--surface-h);color:var(--text-1)}
+
+.config-field{margin-bottom:20px}
+.config-label{color:var(--text-3);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px;display:block;}
+.config-input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text-1);border-radius:var(--r-sm);padding:12px 16px;font-size:14px;transition:border-color .2s;}
+.config-input:focus{border-color:var(--accent)}
+.config-hint{color:var(--text-3);font-size:12px;margin-top:6px;line-height:1.5}
+.btn-save{width:100%;background:var(--accent);color:#fff;padding:14px;border-radius:var(--r-sm);font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;transition:all .2s;margin-top:8px;}
+.btn-save:hover{background:var(--accent-h);transform:translateY(-2px)}
+
+.notif-list{list-style:none;margin:0;padding:0;}
+.notif-item{display:flex;flex-direction:column;padding:12px;border-radius:12px;background:var(--surface);border:1px solid var(--border);margin-bottom:10px;cursor:pointer;transition:all .2s;}
+.notif-item:hover{background:var(--accent-dim);border-color:var(--accent);}
+.notif-item-title{color:var(--text-1);font-size:14px;font-weight:700;margin-bottom:4px}
+.notif-item-sub{color:var(--accent-h);font-size:12px;font-weight:600}
+
+.ai-results-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px;}
+@media(max-width:500px){.ai-results-grid{grid-template-columns:1fr}}
+.ai-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;transition:transform .2s;cursor:pointer;}
+.ai-card:hover{border-color:var(--accent);transform:translateY(-3px)}
+.ai-card-title{color:var(--text-1);font-size:14px;font-weight:700;margin-bottom:6px}
+.ai-card-genres{font-size:11px;color:var(--accent-h);margin-bottom:8px}
+.ai-card-desc{font-size:12px;color:var(--text-2);line-height:1.4}
+.ai-status{padding:12px;background:var(--surface);border-radius:8px;font-size:13px;text-align:center;color:var(--accent-h);margin-bottom:16px;font-weight:600}
+
+/* ── MAIN & HERO ── */
+.main{max-width:1300px;margin:0 auto;padding:2rem 1.5rem}
+.hero{position:relative;width:100%;min-height:380px;border-radius:var(--r-xl);overflow:hidden;margin-bottom:3rem;display:none;background:var(--bg-card);border:1px solid var(--border);}
+.hero.active{display:flex;align-items:center;}
+.hero-bg{position:absolute;inset:0;background-size:cover;background-position:center 20%;opacity:0.35;transition:opacity .5s;}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(90deg,var(--bg) 15%,transparent 100%),linear-gradient(0deg,var(--bg) 0%,transparent 40%);}
+.hero-content{position:relative;z-index:10;padding:40px;max-width:650px;}
+.hero-tag{display:inline-block;background:var(--accent);color:#fff;font-size:11px;font-weight:800;padding:4px 10px;border-radius:20px;text-transform:uppercase;letter-spacing:1px;margin-bottom:16px;}
+.hero-title{color:var(--text-1);font-size:36px;font-weight:900;line-height:1.1;margin-bottom:16px;}
+.hero-desc{color:var(--text-2);font-size:15px;line-height:1.6;margin-bottom:24px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+.btn-play-hero{display:inline-flex;align-items:center;gap:10px;background:var(--text-1);color:#000;padding:12px 28px;border-radius:30px;font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;transition:transform .2s;}
+.btn-play-hero:hover{transform:scale(1.05);}
+
+.section-label{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.section-label h2{color:var(--text-1);font-size:18px;font-weight:800;text-transform:uppercase;letter-spacing:.5px}
+.section-label .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0}
+
+/* ── FILTER TABS ── */
+.filter-tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px}
+.filter-tab{background:transparent;border:1px solid var(--border);color:var(--text-2);padding:8px 20px;border-radius:30px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;transition:all .2s;}
+.filter-tab:hover{background:var(--surface);color:var(--text-1)}
+.filter-tab.active{background:var(--text-1);color:#000;border-color:var(--text-1)}
+
+/* ── GRID ── */
+.anime-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:24px;margin-bottom:3rem;}
+.anime-card{cursor:pointer;animation:fadeUp .4s ease both;position:relative;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.card-poster{position:relative;aspect-ratio:2/3;border-radius:var(--r-md);overflow:hidden;border:1px solid var(--border);background:var(--surface);margin-bottom:12px;transition:border-color .25s,transform .25s;}
+.anime-card:hover .card-poster{border-color:var(--accent);transform:translateY(-6px);box-shadow:0 8px 24px var(--accent-dim);}
+.card-poster img{width:100%;height:100%;object-fit:cover;transition:transform .4s}
+.anime-card:hover .card-poster img{transform:scale(1.05)}
+.card-rating{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.8);color:var(--warn);font-size:11px;font-weight:800;padding:4px 8px;border-radius:6px;backdrop-filter:blur(4px);}
+.card-ep-badge{position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,.8);color:var(--text-1);font-size:11px;font-weight:700;padding:4px 8px;border-radius:6px;backdrop-filter:blur(4px);}
+.card-overlay{position:absolute;inset:0;background:rgba(0,0,0,.4);opacity:0;transition:opacity .2s;display:flex;align-items:center;justify-content:center;}
+.anime-card:hover .card-overlay{opacity:1}
+.play-icon{width:48px;height:48px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.5);}
+.card-title{color:var(--text-1);font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px;}
+.anime-card:hover .card-title{color:var(--accent-h)}
+.card-meta{color:var(--text-3);font-size:12px;}
+
+/* ── SKELETON ── */
+.skeleton{border-radius:var(--r-sm);background:linear-gradient(90deg,var(--surface) 25%,var(--surface-h) 50%,var(--surface) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+.skeleton-poster{aspect-ratio:2/3;border-radius:var(--r-md)}
+.skeleton-title{height:14px;width:80%;margin-bottom:8px}
+.skeleton-sub{height:12px;width:50%}
+
+/* ── LOAD MORE ── */
+.load-more-wrap{text-align:center;margin-top:16px;margin-bottom:4rem}
+.load-more-btn{background:transparent;border:1px solid var(--border);color:var(--text-1);padding:14px 40px;border-radius:30px;font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:1px;transition:all .2s;}
+.load-more-btn:hover{background:var(--surface);border-color:var(--text-3);}
+
+/* ── PLAYER & DETAIL VIEW ── */
+#player-view{display:none}
+.back-btn{display:inline-flex;align-items:center;gap:8px;color:var(--text-2);background:transparent;border:none;font-size:12px;font-weight:800;padding:10px 16px;border-radius:30px;margin-bottom:24px;cursor:pointer;transition:all .2s;text-transform:uppercase;letter-spacing:1px;}
+.back-btn:hover{background:var(--surface);color:var(--text-1)}
+
+.detail-header{display:flex;flex-direction:column;gap:32px;margin-bottom:40px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-xl);padding:32px;}
+@media(min-width:768px){.detail-header{flex-direction:row;}}
+.detail-poster{width:220px;flex-shrink:0;border-radius:var(--r-md);overflow:hidden;border:1px solid var(--border);box-shadow:0 20px 40px rgba(0,0,0,.5);}
+.detail-poster img{width:100%;height:100%;object-fit:cover;}
+.detail-info{flex:1;}
+.detail-title{color:var(--text-1);font-size:32px;font-weight:900;line-height:1.2;margin-bottom:12px}
+.detail-meta{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:20px}
+.tag{background:var(--surface);border:1px solid var(--border);color:var(--text-2);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;}
+.tag.accent{background:var(--accent-dim);border-color:var(--accent);color:var(--accent-h)}
+.detail-desc{color:var(--text-2);font-size:14px;line-height:1.7;margin-bottom:24px;max-width:800px;}
+.detail-actions{display:flex;gap:12px;flex-wrap:wrap;}
+.btn-primary{display:inline-flex;align-items:center;gap:10px;background:var(--accent);color:#fff;font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;padding:14px 28px;border-radius:30px;transition:all .2s;}
+.btn-primary:hover{transform:scale(1.05);background:var(--accent-h);}
+.btn-primary:disabled{opacity:0.5;pointer-events:none;}
+.btn-outline{display:inline-flex;align-items:center;gap:10px;background:transparent;border:1px solid var(--border);color:var(--text-1);font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;padding:12px 24px;border-radius:30px;transition:all .2s;}
+.btn-outline:hover{background:var(--surface);border-color:var(--text-3);}
+.btn-outline.active{border-color:var(--success);color:var(--success);}
+
+.player-container{display:none;margin-bottom:40px;animation:fadeUp .3s ease;}
+.player-container.active{display:block;}
+.player-wrap{position:relative;width:100%;aspect-ratio:16/9;background:#000;border-radius:var(--r-xl);overflow:hidden;border:1px solid var(--border);margin-bottom:16px;box-shadow:0 20px 50px rgba(0,0,0,.6);}
+.player-wrap iframe,.player-wrap video{position:absolute;inset:0;width:100%;height:100%;border:none;background:#000}
+.player-placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:var(--text-3);font-size:15px;font-weight:600;text-align:center;padding:20px;}
+
+.source-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-lg);padding:12px 20px;margin-bottom:16px;}
+.source-label{color:var(--text-3);font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;flex-shrink:0}
+.source-btn{background:var(--surface);border:1px solid var(--border);color:var(--text-2);padding:8px 16px;border-radius:var(--r-sm);font-size:13px;font-weight:600;transition:all .2s;cursor:pointer;}
+.source-btn:hover{background:var(--surface-h);color:var(--text-1)}
+.source-btn.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+.sub-badge{display:inline-flex;align-items:center;gap:6px;background:var(--success-dim);color:var(--success);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:800;margin-left:auto;}
+.fallback-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(251,191,36,.1);color:var(--warn);border:1px solid rgba(251,191,36,.3);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:800;margin-left:auto;}
+
+.nav-row{display:flex;justify-content:space-between;gap:12px;}
+.nav-btn{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:16px;border-radius:var(--r-lg);background:var(--bg-card);border:1px solid var(--border);transition:all .2s;color:var(--text-1);font-weight:700;font-size:14px;}
+.nav-btn:hover:not(:disabled){background:var(--surface);border-color:var(--accent)}
+.nav-btn:disabled{opacity:.3;pointer-events:none}
+
+.episodes-section{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-xl);padding:24px;margin-bottom:40px;}
+.episodes-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.episodes-title{color:var(--text-1);font-size:18px;font-weight:800;}
+.season-tabs{display:flex;gap:8px;flex-wrap:wrap;}
+.season-tab{background:transparent;border:1px solid var(--border);color:var(--text-3);padding:6px 16px;border-radius:20px;font-size:13px;font-weight:700;transition:all .2s;cursor:pointer;}
+.season-tab:hover{background:var(--surface);color:var(--text-1)}
+.season-tab.active{background:var(--text-1);color:#000;border-color:var(--text-1)}
+
+.ep-list-wide{list-style:none;display:flex;flex-direction:column;gap:8px;}
+.ep-list-wide li a{display:flex;align-items:center;gap:16px;padding:14px 20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);color:var(--text-2);transition:all .2s;}
+.ep-list-wide li a:hover{background:var(--surface-h);color:var(--text-1);transform:translateX(4px);}
+.ep-list-wide li a.current{background:var(--accent-dim);border-color:var(--accent);color:var(--text-1);}
+.ep-list-wide li a.watched{border-left:4px solid var(--success);}
+.ep-num-box{font-size:14px;font-weight:800;color:var(--text-3);min-width:30px;}
+.ep-list-wide li a.current .ep-num-box{color:var(--accent-h);}
+.ep-name-wide{flex:1;font-size:14px;font-weight:600;}
+.ep-unavailable{margin-left:auto;font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;background:rgba(248,113,113,.1);color:var(--danger);text-transform:uppercase}
+
+.history-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:16px}
+.history-empty{color:var(--text-3);font-size:14px;text-align:center;padding:40px 0;font-weight:600;}
+
+.toast{position:fixed;bottom:24px;right:24px;z-index:600;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--r-md);padding:14px 20px;color:var(--text-1);font-size:14px;font-weight:700;display:flex;align-items:center;gap:12px;transform:translateY(80px);opacity:0;transition:transform .3s,opacity .3s;box-shadow:0 12px 40px rgba(0,0,0,.8);max-width:340px;}
+.toast.show{transform:translateY(0);opacity:1}
+.toast-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+.spinner{width:30px;height:30px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media(max-width:768px){
+  .header-inner{gap:1rem;}
+  .search-wrap{position:absolute;top:100%;left:0;right:0;max-width:100%;padding:10px;background:var(--bg);border-bottom:1px solid var(--border);display:none;}
+  .search-wrap.active{display:block;}
+  .detail-poster{width:140px;margin:0 auto;}
+  .detail-header{text-align:center;}
+  .detail-actions{justify-content:center;}
+  .hero-title{font-size:24px;}
+}
+</style>
 </head>
 <body>
 
 <header class="header">
-    <div class="header-inner">
-        <div class="logo" onclick="goHome()">
-            <div class="logo-dot"></div><span>AniStream</span>
-        </div>
-        <div class="search-wrap" id="searchWrap">
-            <svg class="search-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-            </svg>
-            <input type="text" id="searchInput" placeholder="Hledat anime…" autocomplete="off">
-            <div class="search-results" id="searchResults"></div>
-        </div>
-        <div class="header-right">
-            <button class="btn-icon ai-btn" onclick="openAiModal()">🤖 AI Doporučení</button>
-            <div class="notif-bell-wrap">
-                <button class="btn-icon" onclick="openNotifModal()" title="Upozornění">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-                </button>
-                <div class="notif-dot" id="notifDot"></div>
-            </div>
-            <button class="btn-icon" onclick="openHistory()" title="Historie">
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            </button>
-            <button class="btn-icon" onclick="openConfig()" title="Nastavení">
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-            </button>
-        </div>
+  <div class="header-inner">
+    <div class="logo" onclick="goHome()">
+      <div class="logo-dot"></div>
+      <span>AniStream</span>
     </div>
+    <div class="search-wrap" id="searchWrap">
+      <svg class="search-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input type="text" id="searchInput" placeholder="Hledat anime…" autocomplete="off">
+      <div class="search-results" id="searchResults"></div>
+    </div>
+    <div class="header-right">
+      <button class="btn-icon ai-btn" onclick="openAiModal()">🤖 AI Doporučení</button>
+      <div class="notif-bell-wrap">
+        <button class="btn-icon" onclick="openNotifModal()" title="Upozornění">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+        </button>
+        <div class="notif-dot" id="notifDot"></div>
+      </div>
+      <button class="btn-icon" onclick="openHistory()" title="Historie">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+        </svg>
+      </button>
+      <button class="btn-icon" onclick="openConfig()" title="Nastavení">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
 </header>
 
 <main class="main" id="home-view">
-    <div class="hero" id="heroSection">
-        <div class="hero-bg" id="heroBg"></div>
-        <div class="hero-overlay"></div>
-        <div class="hero-content">
-            <span class="hero-tag">Nejsledovanější právě teď</span>
-            <h1 class="hero-title" id="heroTitle">—</h1>
-            <p class="hero-desc" id="heroDesc">—</p>
-            <button class="btn-play-hero" id="heroBtn">
-                <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg> Přehrát
-            </button>
-        </div>
+  <div class="hero" id="heroSection">
+    <div class="hero-bg" id="heroBg"></div>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <span class="hero-tag">Nejsledovanější právě teď</span>
+      <h1 class="hero-title" id="heroTitle">—</h1>
+      <p class="hero-desc" id="heroDesc">—</p>
+      <button class="btn-play-hero" id="heroBtn">
+        <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Přehrát
+      </button>
     </div>
+  </div>
 
-    <div class="top-filters-row">
-        <div class="filter-tabs" id="filterTabs">
-            <button class="filter-tab active" onclick="switchFilter(this,'TRENDING')">Trending</button>
-            <button class="filter-tab" onclick="switchFilter(this,'POPULAR')">Populární</button>
-            <button class="filter-tab" onclick="switchFilter(this,'TOP_RATED')">Top hodnocení</button>
-            <button class="filter-tab" onclick="switchFilter(this,'SEASONAL')">Tato sezona</button>
-        </div>
-        <button class="btn-advanced-filter" onclick="toggleAdvancedFilters()">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg> Rozšířené filtry
-        </button>
-    </div>
+  <div class="filter-tabs" id="filterTabs">
+    <button class="filter-tab active" onclick="switchFilter(this,'TRENDING')">Trending</button>
+    <button class="filter-tab" onclick="switchFilter(this,'POPULAR')">Populární</button>
+    <button class="filter-tab" onclick="switchFilter(this,'TOP_RATED')">Top hodnocení</button>
+    <button class="filter-tab" onclick="switchFilter(this,'SEASONAL')">Tato sezona</button>
+  </div>
 
-    <div class="advanced-filters-panel" id="advancedFilters">
-        <div class="filter-group">
-            <div class="filter-label">Řazení</div>
-            <div class="filter-pill-container" id="filterSort">
-                <button class="filter-pill active" data-val="TRENDING_DESC" onclick="togglePill(this, true)">Nejnovější / Trending</button>
-                <button class="filter-pill" data-val="SCORE_DESC" onclick="togglePill(this, true)">Hodnocení</button>
-                <button class="filter-pill" data-val="POPULARITY_DESC" onclick="togglePill(this, true)">Popularita</button>
-                <button class="filter-pill" data-val="TITLE_ENGLISH" onclick="togglePill(this, true)">A - Z</button>
-            </div>
-        </div>
-        <div class="filter-group">
-            <div class="filter-label">Rok vydání</div>
-            <input type="number" id="filterYear" class="filter-input" placeholder="Např. 2024">
-        </div>
-        <div class="filter-group">
-            <div class="filter-label">Status</div>
-            <div class="filter-pill-container" id="filterStatus">
-                <button class="filter-pill" data-val="RELEASING" onclick="togglePill(this, true, true)">Vysílané</button>
-                <button class="filter-pill" data-val="FINISHED" onclick="togglePill(this, true, true)">Ukončené</button>
-            </div>
-        </div>
-        <div class="filter-group" style="grid-column: 1 / -1;">
-            <div class="filter-label">Žánry (možno vybrat více)</div>
-            <div class="filter-pill-container" id="filterGenres">
-                <button class="filter-pill" data-val="Action" onclick="togglePill(this)">Action</button>
-                <button class="filter-pill" data-val="Adventure" onclick="togglePill(this)">Adventure</button>
-                <button class="filter-pill" data-val="Comedy" onclick="togglePill(this)">Comedy</button>
-                <button class="filter-pill" data-val="Drama" onclick="togglePill(this)">Drama</button>
-                <button class="filter-pill" data-val="Fantasy" onclick="togglePill(this)">Fantasy</button>
-                <button class="filter-pill" data-val="Horror" onclick="togglePill(this)">Horror</button>
-                <button class="filter-pill" data-val="Mystery" onclick="togglePill(this)">Mystery</button>
-                <button class="filter-pill" data-val="Psychological" onclick="togglePill(this)">Psychological</button>
-                <button class="filter-pill" data-val="Romance" onclick="togglePill(this)">Romance</button>
-                <button class="filter-pill" data-val="Sci-Fi" onclick="togglePill(this)">Sci-Fi</button>
-                <button class="filter-pill" data-val="Slice of Life" onclick="togglePill(this)">Slice of Life</button>
-                <button class="filter-pill" data-val="Sports" onclick="togglePill(this)">Sports</button>
-                <button class="filter-pill" data-val="Supernatural" onclick="togglePill(this)">Supernatural</button>
-            </div>
-        </div>
-        <button class="apply-filters-btn" onclick="applyAdvancedFilters()">Aplikovat filtr</button>
-    </div>
-    
-    <div class="section-label"><div class="dot"></div><h2 id="sectionTitle">Výběr</h2></div>
-    <div class="anime-grid" id="animeGrid"></div>
-    <div class="load-more-wrap"><button class="load-more-btn" id="loadMoreBtn" onclick="loadMore()">Načíst více</button></div>
+  <div class="section-label">
+    <div class="dot"></div>
+    <h2 id="sectionTitle">Výběr</h2>
+  </div>
+
+  <div class="anime-grid" id="animeGrid"></div>
+  <div class="load-more-wrap">
+    <button class="load-more-btn" id="loadMoreBtn" onclick="loadMore()">Načíst více</button>
+  </div>
 </main>
 
 <main class="main" id="player-view">
-    <button class="back-btn" onclick="goHome()">
-        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg> Zpět na přehled
-    </button>
-    
-    <div class="detail-header" id="detailHeader">
-        <div class="detail-poster"><img id="detailPosterImg" src="" alt="Poster"></div>
-        <div class="detail-info">
-            <h1 class="detail-title" id="detailTitle">—</h1>
-            <div class="detail-meta" id="detailMeta"></div>
-            <div class="detail-desc" id="detailDesc">Načítám informace...</div>
-            <div class="detail-actions">
-                <button class="btn-primary" id="mainPlayBtn" onclick="playNextOrFirstEp()" disabled>
-                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg> <span id="mainPlayBtnText">Načítám...</span>
-                </button>
-                <button class="btn-outline" id="favBtn" onclick="toggleFav()">
-                    <span id="favBtnText">Do oblíbených</span>
-                </button>
-            </div>
-        </div>
+  <button class="back-btn" onclick="goHome()">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+    Zpět na přehled
+  </button>
+
+  <div class="detail-header" id="detailHeader">
+    <div class="detail-poster">
+      <img id="detailPosterImg" src="" alt="Poster">
+    </div>
+    <div class="detail-info">
+      <h1 class="detail-title" id="detailTitle">—</h1>
+      <div class="detail-meta" id="detailMeta"></div>
+      <div class="detail-desc" id="detailDesc">Načítám informace...</div>
+      <div class="detail-actions">
+        <button class="btn-primary" id="mainPlayBtn" onclick="playNextOrFirstEp()" disabled>
+          <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          <span id="mainPlayBtnText">Načítám...</span>
+        </button>
+        <button class="btn-outline" id="favBtn" onclick="toggleFav()">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+          <span id="favBtnText">Do oblíbených</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="player-container" id="playerContainer">
+    <div class="player-wrap" id="playerWrap">
+      <div class="player-placeholder" id="playerPlaceholder">
+        <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/>
+        </svg>
+        <span>Vyber epizodu pro přehrání</span>
+      </div>
     </div>
 
-    <div class="player-container" id="playerContainer">
-        <div class="player-wrap" id="playerWrap">
-            <div class="player-placeholder" id="playerPlaceholder">
-                <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
-                <span>Připravuji stream...</span>
-            </div>
-        </div>
-
-        <div class="source-row" id="sourceRow" style="display:none">
-            <span class="source-label">Zdroj:</span>
-            <div id="sourceBtns" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"></div>
-            
-            <div id="fallbackControls" style="display:none; margin-left:auto; gap:8px; align-items:center;">
-                <span class="source-label" style="margin-right:4px;">Titulky:</span>
-                <button id="fbSubEn" class="source-btn active" onclick="setFallbackSub('en')">EN Orig.</button>
-                <button id="fbSubCz" class="source-btn" onclick="setFallbackSub('cs')">AI Překlad CZ</button>
-            </div>
-            
-            <div id="badgeContainer" style="margin-left:auto; display:flex; gap:6px;"></div>
-        </div>
-
-        <div class="nav-row">
-            <button class="nav-btn" id="prevEpBtn" onclick="navigateEp(-1)" disabled>
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg> Předchozí
-            </button>
-            <button class="nav-btn" id="watchedBtn" onclick="toggleWatched()" style="flex:0.5;background:transparent;">
-                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-            </button>
-            <button class="nav-btn" id="nextEpBtn" onclick="navigateEp(1)" disabled>
-                Další <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
-            </button>
-        </div>
+    <div class="source-row" id="sourceRow" style="display:none">
+      <span class="source-label">Zdroj:</span>
+      <div id="sourceBtns" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"></div>
+      <div id="sourceBadge" style="margin-left:auto"></div>
     </div>
 
-    <div class="episodes-section">
-        <div class="episodes-header">
-            <div class="episodes-title">Seznam epizod</div>
-            <div class="season-tabs" id="seasonTabs" style="display:none"></div>
-        </div>
-        <ul class="ep-list-wide" id="epList">
-            <li style="color:var(--text-3);font-size:14px;padding:20px;text-align:center;">Načítám seznam...</li>
-        </ul>
+    <div class="nav-row">
+      <button class="nav-btn" id="prevEpBtn" onclick="navigateEp(-1)" disabled>
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>
+        <span>Předchozí</span>
+      </button>
+      <button class="nav-btn" id="watchedBtn" onclick="toggleWatched()" style="flex:0.5;background:transparent;">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      </button>
+      <button class="nav-btn" id="nextEpBtn" onclick="navigateEp(1)" disabled>
+        <span>Další</span>
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
     </div>
+  </div>
+
+  <div class="episodes-section">
+    <div class="episodes-header">
+      <div class="episodes-title">Seznam epizod</div>
+      <div class="season-tabs" id="seasonTabs" style="display:none"></div>
+    </div>
+    <ul class="ep-list-wide" id="epList">
+      <li style="color:var(--text-3);font-size:14px;padding:20px;text-align:center;">Načítám seznam...</li>
+    </ul>
+  </div>
 </main>
 
 <!-- MODALS -->
 <div class="modal-overlay" id="configModal" onclick="if(event.target===this)closeConfig()">
-    <div class="modal">
-        <div class="modal-header">
-            <div class="modal-title">⚙️ Nastavení</div>
-            <button class="modal-close" onclick="closeConfig()">✕</button>
-        </div>
-        <div class="config-field">
-            <label class="config-label">Výchozí zdroj</label>
-            <select id="cfgSource" class="config-input">
-                <option value="auto">Automaticky (nejlepší kvalita s CZ)</option>
-                <option value="voe">Voe</option>
-                <option value="doodstream">Doodstream</option>
-                <option value="streamtape">Streamtape</option>
-                <option value="vidmoly">Vidmoly</option>
-                <option value="mixdrop">Mixdrop</option>
-            </select>
-        </div>
-        <div class="config-field">
-            <label class="config-label">Cloudflare Worker URL</label>
-            <input class="config-input" type="text" id="cfgProxy" placeholder="https://anisteam.zitkatomik007.workers.dev">
-        </div>
-        <button class="btn-save" onclick="saveConfig()">Uložit nastavení</button>
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">⚙️ Nastavení</div>
+      <button class="modal-close" onclick="closeConfig()">✕</button>
     </div>
+    <div class="config-field">
+      <label class="config-label">Preferovaný zdroj</label>
+      <select id="cfgSource" class="config-input">
+        <option value="auto">Automaticky (VOE jako výchozí)</option>
+        <option value="voe">Voe</option>
+        <option value="doodstream">Doodstream</option>
+        <option value="streamtape">Streamtape</option>
+        <option value="vidmoly">Vidmoly</option>
+        <option value="mixdrop">Mixdrop</option>
+      </select>
+      <div class="config-hint">Pokusí se primárně spustit vybraný server. Ostatní servery budou k dispozici jako záloha.</div>
+    </div>
+    <div class="config-field">
+      <label class="config-label">Cloudflare Worker URL</label>
+      <input class="config-input" type="text" id="cfgProxy" placeholder="https://anisteam.zitkatomik007.workers.dev">
+      <div class="config-hint">Proxy Worker pro přístup k svetserialu.io. Musí mít nastavenou SESSION cookie.</div>
+    </div>
+    <button class="btn-save" onclick="saveConfig()">Uložit nastavení</button>
+  </div>
 </div>
 
 <div class="modal-overlay" id="historyModal" onclick="if(event.target===this)closeHistory()">
-    <div class="modal" style="max-width:800px">
-        <div class="modal-header">
-            <div class="modal-title">Historie & Oblíbené</div>
-            <button class="modal-close" onclick="closeHistory()">✕</button>
-        </div>
-        <div id="historyContent" style="max-height:60vh;overflow-y:auto;padding-right:10px;"></div>
+  <div class="modal" style="max-width:800px">
+    <div class="modal-header">
+      <div class="modal-title">Historie & Oblíbené</div>
+      <button class="modal-close" onclick="closeHistory()">✕</button>
     </div>
+    <div id="historyContent" style="max-height:60vh;overflow-y:auto;padding-right:10px;"></div>
+  </div>
 </div>
 
 <div class="modal-overlay" id="notifModal" onclick="if(event.target===this)closeNotifModal()">
-    <div class="modal">
-        <div class="modal-header">
-            <div class="modal-title">🔔 Nové epizody</div>
-            <button class="modal-close" onclick="closeNotifModal()">✕</button>
-        </div>
-        <div id="notifContent" style="max-height:60vh;overflow-y:auto;padding-right:10px;">
-            <div style="text-align:center;padding:20px;color:var(--text-3)">Načítám...</div>
-        </div>
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">🔔 Nové epizody</div>
+      <button class="modal-close" onclick="closeNotifModal()">✕</button>
     </div>
+    <div id="notifContent" style="max-height:60vh;overflow-y:auto;padding-right:10px;">
+      <div style="text-align:center;padding:20px;color:var(--text-3)">Načítám...</div>
+    </div>
+  </div>
 </div>
 
 <div class="modal-overlay" id="aiModal" onclick="if(event.target===this)closeAiModal()">
-    <div class="modal" style="max-width:700px">
-        <div class="modal-header">
-            <div class="modal-title">🤖 AI Doporučení</div>
-            <button class="modal-close" onclick="closeAiModal()">✕</button>
-        </div>
-        <div class="ai-status" id="aiStatus">Načítám historii a generuji... (Může trvat 10 vteřin)</div>
-        <div class="ai-results-grid" id="aiResults" style="max-height:55vh;overflow-y:auto;padding-right:10px;"></div>
+  <div class="modal" style="max-width:700px">
+    <div class="modal-header">
+      <div class="modal-title">🤖 AI Doporučení</div>
+      <button class="modal-close" onclick="closeAiModal()">✕</button>
     </div>
+    <div class="ai-status" id="aiStatus">Načítám historii a generuji... (Může trvat 10 vteřin)</div>
+    <div class="ai-results-grid" id="aiResults" style="max-height:55vh;overflow-y:auto;padding-right:10px;"></div>
+  </div>
 </div>
 
-<div class="toast" id="toast"><div class="toast-dot" id="toastDot"></div><span id="toastMsg"></span></div>
+<div class="toast" id="toast">
+  <div class="toast-dot" id="toastDot"></div>
+  <span id="toastMsg"></span>
+</div>
 
-<script src="script.js"></script>
+<script>
+/* ══════════════════════════════════════════════════════
+   CONFIG & STORAGE
+══════════════════════════════════════════════════════ */
+const DEFAULT_PROXY = 'https://anisteam.zitkatomik007.workers.dev';
+const GEMINI_KEY = 'AQ.Ab8RN6IjHOpEeI_SJChD___dKh4BzhldoTazzIJ0Q9EupHBtfw';
+
+function getCfg() { try { return JSON.parse(localStorage.getItem('ani_cfg5') || '{}'); } catch { return {}; } }
+function setCfg(d) { localStorage.setItem('ani_cfg5', JSON.stringify(d)); }
+function getProxy() { return getCfg().proxy || DEFAULT_PROXY; }
+function getDefaultSource() { return getCfg().defaultSource || 'auto'; }
+
+function openConfig() {
+  document.getElementById('cfgProxy').value = getCfg().proxy || DEFAULT_PROXY;
+  document.getElementById('cfgSource').value = getDefaultSource();
+  document.getElementById('configModal').classList.add('open');
+}
+function closeConfig() { document.getElementById('configModal').classList.remove('open'); }
+function saveConfig() {
+  const cfg = getCfg();
+  cfg.proxy = document.getElementById('cfgProxy').value.trim().replace(/\/$/, '');
+  cfg.defaultSource = document.getElementById('cfgSource').value;
+  setCfg(cfg);
+  closeConfig();
+  showToast('Nastavení uloženo', true);
+}
+
+function getWatched() { try { return JSON.parse(localStorage.getItem('ani_watched') || '{}'); } catch { return {}; } }
+function setWatched(d) { localStorage.setItem('ani_watched', JSON.stringify(d)); }
+function getFavs() { try { return JSON.parse(localStorage.getItem('ani_favs') || '[]'); } catch { return []; } }
+function setFavs(d) { localStorage.setItem('ani_favs', JSON.stringify(d)); }
+function getHistory() { try { return JSON.parse(localStorage.getItem('ani_history') || '[]'); } catch { return []; } }
+function addHistory(anime) {
+  let h = getHistory().filter(x => x.id !== anime.id);
+  h.unshift({ id: anime.id, title: anime.title, cover: anime.cover, ts: Date.now() });
+  if (h.length > 50) h = h.slice(0, 50);
+  localStorage.setItem('ani_history', JSON.stringify(h));
+}
+function isEpWatched(animeId, epNum, season) { return !!(getWatched()[`${animeId}_s${season}`]?.[epNum]); }
+function markEpWatched(animeId, epNum, season, val) {
+  const w = getWatched();
+  const key = `${animeId}_s${season}`;
+  if (!w[key]) w[key] = {};
+  if (val) w[key][epNum] = 1; else delete w[key][epNum];
+  setWatched(w);
+}
+
+/* ══════════════════════════════════════════════════════
+   STATE & UTILS
+══════════════════════════════════════════════════════ */
+const state = {
+  currentAnime: null, currentEp: null, currentEpIndex: 0,
+  episodes: [], allSeasons: {}, availableSeasons: [], currentSeason: 1,
+  svtSlug: null, svtTvShowId: null,
+  isFallbackMode: false,   // true = show NOT found on svetserialu
+  svtSources: [],          // [{provider, b64}] extracted from episode page
+  svtSourceIndex: 0,
+  page: 1, filter: 'TRENDING',
+  hlsInstance: null,
+};
+
+let toastTO;
+function showToast(msg, success = false) {
+  const toast = document.getElementById('toast');
+  document.getElementById('toastDot').style.background = success ? 'var(--success)' : 'var(--accent)';
+  document.getElementById('toastMsg').textContent = msg;
+  clearTimeout(toastTO);
+  toast.classList.add('show');
+  toastTO = setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+function getTitle(a) { return a.title?.english || a.title?.romaji || a.title?.native || '—'; }
+function stripHtml(html) {
+  if (!html) return '';
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  return doc.body.textContent || '';
+}
+function simplifyTitle(title) {
+  return title.toLowerCase()
+    .replace(/(?:season|série|part|cour)\s*\d+.*$/i, '')
+    .replace(/[^a-z0-9]/g, '');
+}
+
+/* ══════════════════════════════════════════════════════
+   PROXY API
+══════════════════════════════════════════════════════ */
+async function proxyFetch(path) {
+  const res = await fetch(getProxy() + path);
+  if (!res.ok) throw new Error(`HTTP ${res.status}: ${path}`);
+  return res.text();
+}
+
+/* ══════════════════════════════════════════════════════
+   ANILIST GRAPHQL
+══════════════════════════════════════════════════════ */
+async function anilistQuery(query, variables) {
+  const res = await fetch('https://graphql.anilist.co', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query, variables })
+  });
+  const json = await res.json();
+  if (json.errors) throw new Error(json.errors[0].message);
+  return json.data;
+}
+
+const FIELDS = `id title{romaji english native} synonyms coverImage{large extraLarge} bannerImage
+description(asHtml:false) episodes status genres averageScore season seasonYear format nextAiringEpisode{episode}`;
+
+async function fetchList(sort, page = 1, extra = '') {
+  const q = `query($p:Int${extra ? ',$s:MediaSeason,$y:Int' : ''}){Page(page:$p,perPage:30){pageInfo{hasNextPage}media(type:ANIME,sort:${sort},isAdult:false${extra}){${FIELDS}}}}`;
+  const vars = { p: page };
+  if (extra) {
+    const mo = new Date().getMonth();
+    vars.s = ['WINTER','WINTER','SPRING','SPRING','SPRING','SUMMER','SUMMER','SUMMER','FALL','FALL','FALL','WINTER'][mo];
+    vars.y = new Date().getFullYear();
+  }
+  const d = await anilistQuery(q, vars);
+  return { items: d.Page.media, hasMore: d.Page.pageInfo.hasNextPage };
+}
+
+async function searchAnime(q) {
+  const d = await anilistQuery(`query($s:String){Page(perPage:8){media(search:$s,type:ANIME,isAdult:false){${FIELDS}}}}`, { s: q });
+  return d.Page.media;
+}
+
+async function fetchAnimeDetail(id) {
+  const d = await anilistQuery(`query($id:Int){Media(id:$id,type:ANIME){${FIELDS}}}`, { id });
+  return d.Media;
+}
+
+/* ══════════════════════════════════════════════════════
+   NOTIFIKACE
+══════════════════════════════════════════════════════ */
+async function openNotifModal() {
+  document.getElementById('notifModal').classList.add('open');
+  const c = document.getElementById('notifContent');
+  c.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-3)"><div class="spinner" style="margin:0 auto"></div></div>';
+  try {
+    const html = await proxyFetch('/?ajaxNotifyTVShows=true');
+    const items = Array.from(new DOMParser().parseFromString(html, 'text/html').querySelectorAll('a[href*="/serial/"]')).slice(0, 10);
+    if (!items.length) { c.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-3)">Žádné nové epizody.</div>'; return; }
+    c.innerHTML = '<ul class="notif-list">' + items.map(el => {
+      const a = el.tagName === 'A' ? el : el.querySelector('a');
+      if (!a) return '';
+      const titleEl = a.querySelector('.ep-title,.title,span,strong,b');
+      let title = titleEl ? titleEl.textContent.trim() : a.textContent.trim();
+      const m = a.getAttribute('href').match(/\/serial\/([^/]+)\/(s\d+e\d+)/i);
+      const epStr = m ? m[2].toUpperCase() : 'Nová epizoda';
+      if (m && (!title || title.length < 3)) title = m[1].replace(/-/g, ' ');
+      return `<li class="notif-item" onclick="openSvtDirectly('${m?.[1]||''}')"><div class="notif-item-title">${capitalize(title)}</div><div class="notif-item-sub">${epStr}</div></li>`;
+    }).join('') + '</ul>';
+    document.getElementById('notifDot').style.display = 'none';
+  } catch {
+    c.innerHTML = '<div style="text-align:center;padding:20px;color:var(--danger)">Chyba. Zkontroluj proxy a SESSION cookie.</div>';
+  }
+}
+function closeNotifModal() { document.getElementById('notifModal').classList.remove('open'); }
+async function openSvtDirectly(slug) {
+  closeNotifModal();
+  const res = await searchAnime(slug.replace(/-/g, ' '));
+  if (res?.length) openAnime(res[0]); else showToast('Seriál nenalezen', false);
+}
+
+/* ══════════════════════════════════════════════════════
+   AI DOPORUČENÍ
+══════════════════════════════════════════════════════ */
+function openAiModal() { document.getElementById('aiModal').classList.add('open'); runAiRecommendations(); }
+function closeAiModal() { document.getElementById('aiModal').classList.remove('open'); }
+
+async function runAiRecommendations() {
+  const status = document.getElementById('aiStatus'), results = document.getElementById('aiResults');
+  results.innerHTML = '';
+  const combined = [...new Set([...getFavs().map(f => f.title), ...getHistory().map(h => h.title)])];
+  if (!combined.length) { status.innerHTML = 'Nemáš žádnou historii ani oblíbené. AI neví, co ti doporučit! 😭'; return; }
+  status.innerHTML = `Analyzuji tvoji historii (${combined.length} seriálů)...`;
+  const prompt = `Recommend 6 great anime series for a user. Their taste is based on: ${combined.slice(0, 25).join(', ')}.
+STRICT: Do NOT recommend any of those titles.
+Reply ONLY with valid JSON: {"recommendations":[{"name":"Show Name","genres":"Action, Fantasy","desc":"One sentence reason."}]}`;
+  try {
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash-lite:generateContent?key=${GEMINI_KEY}`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 1 } })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    const text = (data.candidates?.[0]?.content?.parts?.[0]?.text || '').replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(text);
+    status.innerHTML = '✓ Doporučení přesně pro tebe:';
+    results.innerHTML = parsed.recommendations.map(r =>
+      `<div class="ai-card" onclick="searchFromAi('${r.name.replace(/'/g, "\\'")}')">
+        <div class="ai-card-title">${r.name}</div>
+        <div class="ai-card-genres">${r.genres}</div>
+        <div class="ai-card-desc">${r.desc}</div>
+      </div>`
+    ).join('');
+  } catch (e) {
+    status.innerHTML = `<span style="color:var(--danger)">Chyba AI: ${e.message}</span>`;
+  }
+}
+
+async function searchFromAi(name) {
+  closeAiModal();
+  document.getElementById('searchInput').value = name;
+  document.getElementById('searchInput').dispatchEvent(new Event('input'));
+  document.getElementById('searchInput').focus();
+}
+
+/* ══════════════════════════════════════════════════════
+   SVT SCRAPER
+══════════════════════════════════════════════════════ */
+async function svtSearch(query) {
+  const html = await proxyFetch(`/?searchfor=${encodeURIComponent(query)}`);
+  const NAV = new Set(['novinky','oblibene','top','serial','anime','search','hledat','index','kategorie','zanr']);
+  const matches = [...html.matchAll(/href="[^"]*\/serial\/([a-z0-9-]+)[^"]*"/g)];
+  if (!matches.length) return null;
+  const slugs = [...new Set(matches.map(m => m[1]).filter(s => s && !NAV.has(s)))];
+  return slugs[0] || null;
+}
+
+async function findSvtSlug(anime, onProgress) {
+  const queries = new Set([anime.title?.english, anime.title?.romaji, anime.title?.native, ...(anime.synonyms || [])].filter(Boolean));
+  for (const t of Array.from(queries)) {
+    const base = t.replace(/(?:\s*[-:]\s*)?(?:season|série|part|cour)\s*\d+.*$/i, '').trim();
+    if (base !== t) queries.add(base);
+    const noPunct = base.replace(/[^\p{L}\d\s]/gu, ' ').replace(/\s+/g, ' ').trim();
+    if (noPunct && noPunct !== base) queries.add(noPunct);
+    const split = base.split(/[:\-]/)[0].trim();
+    if (split.length > 3) queries.add(split);
+  }
+  for (const q of Array.from(queries)) {
+    try {
+      if (onProgress) onProgress(`Hledám na SVT: ${q}…`);
+      const s = await svtSearch(q);
+      if (s) return s;
+    } catch {}
+  }
+  return null;
+}
+
+async function svtEpisodes(slug, season, tvShowId) {
+  const epHtml = await proxyFetch(`/episodes-list?tvShowId=${tvShowId}&season=${season}&episode=1`);
+  const epMatches = [...epHtml.matchAll(/href="[^"]*\/serial\/[^/]+\/(s\d+e\d+)[^"]*"/g)];
+  const nameMatches = [...epHtml.matchAll(/class="ep_name[^"]*"[^>]*>\s*([^<]+)\s*</g)];
+  return epMatches.map((m, i) => {
+    const epNum = parseInt(m[1].match(/e(\d+)/)[1]);
+    return {
+      number: epNum,
+      title: (nameMatches[i] ? nameMatches[i][1].trim() : null) || `Epizoda ${epNum}`,
+      code: m[1], slug, season
+    };
+  });
+}
+
+/* ══════════════════════════════════════════════════════
+   SOURCE EXTRACTION — hlavní oprava
+   Robustní multi-pattern extrakce data-iframe atributů.
+   Namísto složitého M3U8 pipeline prostě načteme embed URL.
+══════════════════════════════════════════════════════ */
+function extractSvtSources(html) {
+  const sources = [];
+  const seen = new Set();
+  let m;
+
+  function addSrc(provider, b64) {
+    if (!seen.has(b64)) { seen.add(b64); sources.push({ provider, b64 }); }
+  }
+
+  // Pattern A: class="source_link PROVIDER" ... data-iframe="B64" (stejný řádek)
+  const reA = /class="source_link\s+(\w+)[^"]*"[^>]*data-iframe="([A-Za-z0-9+/=]+)"/g;
+  while ((m = reA.exec(html)) !== null) addSrc(m[1], m[2]);
+
+  // Pattern B: data-iframe="B64" ... class="source_link PROVIDER" (stejný řádek)
+  const reB = /data-iframe="([A-Za-z0-9+/=]+)"[^>]*class="source_link\s+(\w+)/g;
+  while ((m = reB.exec(html)) !== null) addSrc(m[2], m[1]);
+
+  // Pattern C: multiline — atributy mohou být na různých řádcích (max 200 znaků)
+  if (!sources.length) {
+    const reC = /class="source_link\s+(\w+)[^"]*"[\s\S]{0,200}?data-iframe="([A-Za-z0-9+/=]+)"/g;
+    while ((m = reC.exec(html)) !== null) addSrc(m[1], m[2]);
+
+    const reD = /data-iframe="([A-Za-z0-9+/=]+)"[\s\S]{0,200}?class="source_link\s+(\w+)/g;
+    while ((m = reD.exec(html)) !== null) addSrc(m[2], m[1]);
+  }
+
+  // Pattern D: záchranná síť — najdi jakýkoliv data-iframe a hledej providera v okolí
+  if (!sources.length) {
+    const reE = /data-iframe="([A-Za-z0-9+/=]{20,})"/g;
+    while ((m = reE.exec(html)) !== null) {
+      if (!seen.has(m[1])) {
+        const ctx = html.substring(Math.max(0, m.index - 400), m.index + 100);
+        const prov = ctx.match(/source_link\s+(\w+)/)?.[1] || 'embed';
+        addSrc(prov, m[1]);
+      }
+    }
+  }
+
+  return sources;
+}
+
+/* Vrátí index preferovaného zdroje podle nastavení nebo výchozí (VOE) */
+function getPreferredSourceIndex(sources) {
+  const pref = getDefaultSource();
+  if (pref !== 'auto') {
+    const idx = sources.findIndex(s => s.provider.toLowerCase() === pref.toLowerCase());
+    if (idx >= 0) return idx;
+  }
+  // Výchozí: VOE jako první volba, pak cokoliv dostupného
+  const voe = sources.findIndex(s => s.provider.toLowerCase() === 'voe');
+  return voe >= 0 ? voe : 0;
+}
+
+/* ══════════════════════════════════════════════════════
+   HOME UI
+══════════════════════════════════════════════════════ */
+function renderSkeletons(n = 12) {
+  document.getElementById('animeGrid').innerHTML = Array.from({ length: n }, () =>
+    `<div class="anime-card"><div class="card-poster skeleton skeleton-poster"></div><div class="skeleton skeleton-title"></div><div class="skeleton skeleton-sub"></div></div>`
+  ).join('');
+}
+
+function renderCards(items, append = false) {
+  const grid = document.getElementById('animeGrid');
+  if (!append) grid.innerHTML = '';
+  items.forEach((a, i) => {
+    const title = getTitle(a);
+    const card = document.createElement('div');
+    card.className = 'anime-card';
+    card.style.animationDelay = `${(i % 12) * 0.03}s`;
+    card.innerHTML = `
+      <div class="card-poster">
+        <img src="${a.coverImage?.large || ''}" alt="${title}" loading="lazy">
+        ${a.averageScore ? `<div class="card-rating">★ ${(a.averageScore / 10).toFixed(1)}</div>` : ''}
+        <div class="card-ep-badge">${a.episodes || a.nextAiringEpisode?.episode - 1 || '?'} ep</div>
+        <div class="card-overlay"><div class="play-icon"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div>
+      </div>
+      <div class="card-title">${title}</div>
+      <div class="card-meta">${a.seasonYear || ''} ${a.genres?.[0] ? `· ${a.genres[0]}` : ''}</div>`;
+    card.onclick = () => openAnime(a);
+    grid.appendChild(card);
+  });
+}
+
+const FILTERS = {
+  TRENDING:  { sort: 'TRENDING_DESC',   label: 'Výběr',         extra: '' },
+  POPULAR:   { sort: 'POPULARITY_DESC', label: 'Populární',     extra: '' },
+  TOP_RATED: { sort: 'SCORE_DESC',      label: 'Top hodnocení', extra: '' },
+  SEASONAL:  { sort: 'POPULARITY_DESC', label: 'Tato sezona',   extra: ',season:$s,seasonYear:$y' },
+};
+
+async function loadFilter(filter, append = false) {
+  const f = FILTERS[filter];
+  if (!append) { renderSkeletons(); state.page = 1; document.getElementById('sectionTitle').textContent = f.label; }
+  const btn = document.getElementById('loadMoreBtn');
+  btn.disabled = true;
+  try {
+    const { items, hasMore } = await fetchList(f.sort, state.page, f.extra);
+    const unique = [], seen = new Set();
+    for (const item of items) {
+      const base = simplifyTitle(getTitle(item));
+      if (base && !seen.has(base)) { seen.add(base); unique.push(item); }
+    }
+    if (!append && filter === 'TRENDING' && unique.length > 0) {
+      const hero = unique.shift();
+      document.getElementById('heroBg').style.backgroundImage = `url('${hero.bannerImage || hero.coverImage?.extraLarge}')`;
+      document.getElementById('heroTitle').textContent = getTitle(hero);
+      document.getElementById('heroDesc').textContent = stripHtml(hero.description) || 'Skvělé anime, které stojí za zhlédnutí.';
+      document.getElementById('heroBtn').onclick = () => openAnime(hero);
+      document.getElementById('heroSection').classList.add('active');
+    } else if (!append) {
+      document.getElementById('heroSection').classList.remove('active');
+    }
+    renderCards(unique, append);
+    btn.disabled = !hasMore;
+    btn.style.display = hasMore ? '' : 'none';
+  } catch (e) {
+    document.getElementById('animeGrid').innerHTML = `<div style="grid-column:1/-1;text-align:center;color:var(--danger)">Chyba: ${e.message}</div>`;
+  }
+}
+
+function switchFilter(btn, filter) {
+  document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  state.filter = filter;
+  state.page = 1;
+  loadFilter(filter);
+}
+function loadMore() { state.page++; loadFilter(state.filter, true); }
+
+/* ══════════════════════════════════════════════════════
+   SEARCH
+══════════════════════════════════════════════════════ */
+let searchTO;
+document.getElementById('searchInput').addEventListener('input', function () {
+  clearTimeout(searchTO);
+  const q = this.value.trim(), res = document.getElementById('searchResults');
+  if (!q) { res.classList.remove('open'); return; }
+  res.innerHTML = '<div style="padding:16px;text-align:center;color:var(--text-3);font-size:13px">Hledám…</div>';
+  res.classList.add('open');
+  searchTO = setTimeout(async () => {
+    try {
+      const items = await searchAnime(q);
+      const unique = [], seen = new Set();
+      for (const item of items) {
+        const base = simplifyTitle(getTitle(item));
+        if (base && !seen.has(base)) { seen.add(base); unique.push(item); }
+      }
+      if (!unique.length) { res.innerHTML = '<div style="padding:16px;text-align:center;color:var(--text-3);font-size:13px">Nic nenalezeno</div>'; return; }
+      res.innerHTML = unique.map(a =>
+        `<div class="search-result-item" onclick="selectSearch(${a.id})">
+          <img class="search-result-img" src="${a.coverImage?.large || ''}">
+          <div style="flex:1">
+            <div class="search-result-title">${getTitle(a)}</div>
+            <div class="search-result-sub">${a.format || ''} · ${a.episodes || '?'} ep · ${a.seasonYear || ''}</div>
+          </div>
+        </div>`
+      ).join('');
+    } catch {
+      res.innerHTML = '<div style="padding:16px;text-align:center;color:var(--danger);font-size:13px">Chyba hledání</div>';
+    }
+  }, 400);
+});
+document.addEventListener('click', e => {
+  if (!e.target.closest('.search-wrap')) document.getElementById('searchResults').classList.remove('open');
+});
+async function selectSearch(id) {
+  document.getElementById('searchResults').classList.remove('open');
+  document.getElementById('searchInput').value = '';
+  openAnime(await fetchAnimeDetail(id));
+}
+
+/* ══════════════════════════════════════════════════════
+   DETAIL & OTEVŘENÍ ANIME
+══════════════════════════════════════════════════════ */
+function showPlayerView() {
+  document.getElementById('home-view').style.display = 'none';
+  document.getElementById('player-view').style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function goHome() {
+  destroyHls();
+  document.getElementById('home-view').style.display = '';
+  document.getElementById('player-view').style.display = 'none';
+  document.getElementById('playerContainer').classList.remove('active');
+}
+
+async function openAnime(anime) {
+  state.currentAnime = {
+    id: anime.id, title: getTitle(anime),
+    cover: anime.coverImage?.large || anime.coverImage?.extraLarge,
+    genres: anime.genres || [], score: anime.averageScore, year: anime.seasonYear, format: anime.format
+  };
+  // Reset stavu
+  state.isFallbackMode = false;
+  state.allSeasons = {}; state.availableSeasons = []; state.currentSeason = 1;
+  state.episodes = []; state.currentEp = null;
+  state.svtSources = []; state.svtSourceIndex = 0;
+
+  addHistory(state.currentAnime);
+  showPlayerView();
+  destroyHls();
+
+  document.getElementById('playerContainer').classList.remove('active');
+  document.getElementById('seasonTabs').style.display = 'none';
+  document.getElementById('mainPlayBtn').disabled = true;
+  document.getElementById('mainPlayBtnText').textContent = 'Načítám...';
+
+  document.getElementById('detailTitle').textContent = state.currentAnime.title;
+  document.getElementById('detailPosterImg').src = state.currentAnime.cover || '';
+  document.getElementById('detailDesc').textContent = stripHtml(anime.description) || 'Bez popisu.';
+  document.getElementById('detailMeta').innerHTML = [
+    anime.format ? `<span class="tag">${anime.format}</span>` : '',
+    anime.seasonYear ? `<span class="tag">${anime.seasonYear}</span>` : '',
+    anime.averageScore ? `<span class="tag accent">★ ${(anime.averageScore / 10).toFixed(1)}</span>` : '',
+    ...(anime.genres || []).slice(0, 3).map(g => `<span class="tag">${g}</span>`),
+  ].join('');
+  updateFavBtn();
+
+  const epList = document.getElementById('epList');
+  function setMsg(msg) {
+    epList.innerHTML = `<li style="padding:20px;text-align:center;color:var(--text-3);display:flex;align-items:center;justify-content:center;gap:10px;"><div class="spinner" style="width:20px;height:20px;border-width:2px;"></div> ${msg}</li>`;
+  }
+  setMsg('Hledám propojení...');
+
+  try {
+    const slug = await findSvtSlug(anime, setMsg);
+    if (!slug) throw new Error('Anime nenalezeno na svetserialu.io');
+    state.svtSlug = slug;
+    setMsg(`Stahuji data (${slug})…`);
+
+    let tvShowId = null;
+    try { const h = await proxyFetch(`/serial/${slug}`); tvShowId = (h.match(/tvShowId[=&](\d+)/)||[,null])[1]; } catch {}
+    if (!tvShowId) { try { const h = await proxyFetch(`/serial/${slug}/s01e01`); tvShowId = (h.match(/tvShowId[=&](\d+)/)||[,null])[1]; } catch {} }
+    if (!tvShowId) throw new Error('Nelze zjistit ID seriálu');
+    state.svtTvShowId = tvShowId;
+
+    let targetS = 1;
+    const titleStr = `${anime.title?.english || ''} ${anime.title?.romaji || ''}`.toLowerCase();
+    const sm = titleStr.match(/(?:season|part)\s*(\d+)/);
+    if (sm) targetS = parseInt(sm[1]);
+
+    const checks = await Promise.all(
+      Array.from({ length: 8 }, (_, i) => i + 1).map(async s => {
+        try { return (await proxyFetch(`/episodes-list?tvShowId=${tvShowId}&season=${s}&episode=1`)).includes('/serial/') ? s : null; }
+        catch { return null; }
+      })
+    );
+    state.availableSeasons = checks.filter(Boolean).length ? checks.filter(Boolean) : [1];
+    state.currentSeason = state.availableSeasons.includes(targetS) ? targetS : (state.availableSeasons.includes(1) ? 1 : state.availableSeasons[0]);
+
+    renderSeasonTabs();
+    const eps = await svtEpisodes(slug, state.currentSeason, tvShowId);
+    state.allSeasons[state.currentSeason] = eps;
+    state.episodes = eps;
+    renderEpList();
+    setupMainPlayBtn();
+
+  } catch (e) {
+    // Fallback mode — titul není na svetserialu
+    state.isFallbackMode = true;
+    state.episodes = Array.from({ length: anime.episodes || 12 }, (_, i) => ({
+      number: i + 1, title: `Epizoda ${i + 1}`,
+      code: `s01e${String(i + 1).padStart(2, '0')}`,
+      slug: null, season: 1
+    }));
+    state.availableSeasons = [1];
+    renderEpList();
+    setupMainPlayBtn();
+    showToast('Titul není na svetserialu.io', false);
+  }
+}
+
+/* ══════════════════════════════════════════════════════
+   SEASON TABS & EPISODE LIST
+══════════════════════════════════════════════════════ */
+function renderSeasonTabs() {
+  const tabs = document.getElementById('seasonTabs');
+  if (state.availableSeasons.length <= 1) { tabs.style.display = 'none'; return; }
+  tabs.style.display = 'flex';
+  tabs.innerHTML = state.availableSeasons.map(s =>
+    `<button class="season-tab ${s === state.currentSeason ? 'active' : ''}" onclick="switchSeason(${s})">S${s}</button>`
+  ).join('');
+}
+
+async function switchSeason(season) {
+  if (season === state.currentSeason && state.allSeasons[season]) return;
+  state.currentSeason = season;
+  document.querySelectorAll('.season-tab').forEach(b =>
+    b.classList.toggle('active', parseInt(b.textContent.replace('S', '')) === season)
+  );
+  document.getElementById('epList').innerHTML = `<li style="padding:20px;text-align:center;color:var(--text-3);"><div class="spinner" style="width:20px;height:20px;border-width:2px;margin:0 auto;"></div></li>`;
+  try {
+    if (!state.allSeasons[season]) {
+      state.allSeasons[season] = await svtEpisodes(state.svtSlug, season, state.svtTvShowId);
+    }
+    state.episodes = state.allSeasons[season];
+    state.currentEp = null;
+    renderEpList();
+    setupMainPlayBtn();
+  } catch (e) {
+    document.getElementById('epList').innerHTML = `<li style="color:var(--danger);padding:20px;text-align:center;">Chyba: ${e.message}</li>`;
+  }
+}
+
+function renderEpList() {
+  const list = document.getElementById('epList');
+  const aId = state.currentAnime?.id, s = state.currentSeason;
+  list.innerHTML = state.episodes.map((ep, i) => {
+    const w = isEpWatched(aId, ep.number, s);
+    const curr = state.currentEp?.number === ep.number && state.currentEp?.season === ep.season;
+    const unavail = state.isFallbackMode || !ep.slug;
+    return `<li id="ep-item-${ep.number}">
+      <a href="#" class="${curr ? 'current' : ''} ${w ? 'watched' : ''}" onclick="playEp(${i});return false">
+        <span class="ep-num-box">${ep.number}</span>
+        <span class="ep-name-wide">${ep.title}</span>
+        ${unavail ? '<span class="ep-unavailable">nedostupné</span>' : ''}
+      </a>
+    </li>`;
+  }).join('');
+}
+
+function setupMainPlayBtn() {
+  const btn = document.getElementById('mainPlayBtn');
+  if (!state.episodes.length) { btn.disabled = true; return; }
+  btn.disabled = false;
+  const idx = state.episodes.findIndex(ep => !isEpWatched(state.currentAnime.id, ep.number, ep.season));
+  document.getElementById('mainPlayBtnText').textContent =
+    idx === -1 ? 'Přehrát znovu' :
+    idx > 0    ? `Pokračovat (Ep. ${state.episodes[idx].number})` :
+                 'Začít sledovat';
+}
+
+function playNextOrFirstEp() {
+  let idx = state.episodes.findIndex(ep => !isEpWatched(state.currentAnime.id, ep.number, ep.season));
+  playEp(idx === -1 ? 0 : idx);
+}
+
+/* ══════════════════════════════════════════════════════
+   PŘEHRÁVÁNÍ — opravený single-step iframe přístup
+══════════════════════════════════════════════════════ */
+async function playEp(index) {
+  const ep = state.episodes[index];
+  if (!ep) return;
+  state.currentEp = ep;
+  state.currentEpIndex = index;
+  renderEpList();
+  updateNavBtns();
+  updateWatchedBtn();
+  destroyHls();
+
+  const container = document.getElementById('playerContainer');
+  container.classList.add('active');
+  container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  const wrap = document.getElementById('playerWrap');
+  wrap.querySelectorAll('video,iframe').forEach(el => el.remove());
+  const ph = document.getElementById('playerPlaceholder');
+  ph.style.display = 'none';
+  document.getElementById('sourceRow').style.display = 'none';
+  document.getElementById('sourceBadge').innerHTML = '';
+
+  // Fallback — titul není na SVT
+  if (state.isFallbackMode || !ep.slug) {
+    ph.style.display = 'flex';
+    ph.innerHTML = `
+      <svg width="52" height="52" fill="none" stroke="var(--warn)" stroke-width="1.5" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="13"/><circle cx="12" cy="16.5" r=".5" fill="var(--warn)"/>
+      </svg>
+      <span style="color:var(--warn);font-size:15px;font-weight:700;">Titul není dostupný na svetserialu.io</span>
+      <span style="font-size:13px;color:var(--text-3);max-width:420px;line-height:1.6;text-align:center;">
+        Tento anime seriál nebyl nalezen v české databázi.<br>
+        Zkus ho vyhledat přímo na <a href="https://svetserialu.io" target="_blank" style="color:var(--accent-h)">svetserialu.io</a>,
+        <a href="https://sledujserialy.io" target="_blank" style="color:var(--accent-h)">sledujserialy.io</a>
+        nebo jiné platformě.
+      </span>`;
+    return;
+  }
+
+  // Načítání
+  const loadDiv = document.createElement('div');
+  loadDiv.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:var(--text-1);background:rgba(0,0,0,.9);z-index:10;font-size:14px;font-weight:600;';
+  loadDiv.innerHTML = '<div class="spinner"></div><span style="color:var(--text-3)">Načítám zdroje...</span>';
+  wrap.appendChild(loadDiv);
+
+  try {
+    const html = await proxyFetch(`/serial/${ep.slug}/${ep.code}`);
+    const sources = extractSvtSources(html);
+
+    if (!sources.length) {
+      throw new Error('Epizoda zatím nemá dostupné zdroje');
+    }
+
+    state.svtSources = sources;
+    loadDiv.remove();
+
+    // Render tlačítek zdrojů
+    const sourceRow = document.getElementById('sourceRow');
+    sourceRow.style.display = 'flex';
+    document.getElementById('sourceBtns').innerHTML = sources.map((s, i) =>
+      `<button class="source-btn" onclick="loadSvtIframe(${i})">${capitalize(s.provider)}</button>`
+    ).join('');
+    document.getElementById('sourceBadge').innerHTML = '<span class="sub-badge">CZ / SK</span>';
+
+    // Spusť preferovaný zdroj
+    loadSvtIframe(getPreferredSourceIndex(sources));
+
+  } catch (e) {
+    loadDiv?.remove();
+    ph.style.display = 'flex';
+    ph.innerHTML = `
+      <svg width="40" height="40" fill="none" stroke="var(--danger)" stroke-width="1.5" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+      </svg>
+      <span style="color:var(--danger);font-weight:700;">Stream nedostupný</span>
+      <span style="font-size:13px;color:var(--text-3);">${e.message}</span>`;
+  }
+}
+
+/* Načtení konkrétního zdroje jako iframe */
+function loadSvtIframe(index) {
+  const src = state.svtSources?.[index];
+  if (!src) return;
+  state.svtSourceIndex = index;
+
+  // Zvýraznit aktivní tlačítko
+  document.querySelectorAll('#sourceBtns .source-btn').forEach((b, i) =>
+    b.classList.toggle('active', i === index)
+  );
+
+  const wrap = document.getElementById('playerWrap');
+  wrap.querySelectorAll('video,iframe').forEach(el => el.remove());
+  document.getElementById('playerPlaceholder').style.display = 'none';
+
+  try {
+    const url = atob(src.b64);
+    const iframe = document.createElement('iframe');
+    iframe.src = url;
+    iframe.allowFullscreen = true;
+    iframe.allow = 'autoplay; fullscreen; encrypted-media; picture-in-picture';
+    iframe.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;border:none;background:#000;';
+    wrap.appendChild(iframe);
+  } catch (e) {
+    const ph = document.getElementById('playerPlaceholder');
+    ph.style.display = 'flex';
+    ph.innerHTML = `<span style="color:var(--danger)">Chyba zdroje (${src.provider}): ${e.message}</span>`;
+  }
+}
+
+function destroyHls() {
+  if (state.hlsInstance) { state.hlsInstance.destroy(); state.hlsInstance = null; }
+}
+
+function updateNavBtns() {
+  document.getElementById('prevEpBtn').disabled = state.currentEpIndex <= 0;
+  document.getElementById('nextEpBtn').disabled = state.currentEpIndex >= state.episodes.length - 1;
+}
+function navigateEp(d) {
+  const nx = state.currentEpIndex + d;
+  if (nx >= 0 && nx < state.episodes.length) playEp(nx);
+}
+
+/* ══════════════════════════════════════════════════════
+   WATCHED / OBLÍBENÉ
+══════════════════════════════════════════════════════ */
+function toggleWatched() {
+  if (!state.currentEp || !state.currentAnime) return;
+  const was = isEpWatched(state.currentAnime.id, state.currentEp.number, state.currentEp.season);
+  markEpWatched(state.currentAnime.id, state.currentEp.number, state.currentEp.season, !was);
+  updateWatchedBtn(); renderEpList(); setupMainPlayBtn();
+}
+function updateWatchedBtn() {
+  if (!state.currentEp || !state.currentAnime) return;
+  const w = isEpWatched(state.currentAnime.id, state.currentEp.number, state.currentEp.season);
+  document.getElementById('watchedBtn').innerHTML =
+    `<svg width="24" height="24" fill="none" stroke="${w ? 'var(--success)' : 'var(--text-3)'}" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>`;
+}
+function toggleFav() {
+  if (!state.currentAnime) return;
+  let f = getFavs();
+  const idx = f.findIndex(x => x.id === state.currentAnime.id);
+  if (idx >= 0) { f.splice(idx, 1); showToast('Odebráno z oblíbených'); }
+  else { f.unshift(state.currentAnime); showToast('Přidáno do oblíbených', true); }
+  setFavs(f); updateFavBtn();
+}
+function updateFavBtn() {
+  if (!state.currentAnime) return;
+  const inFav = getFavs().some(x => x.id === state.currentAnime.id);
+  document.getElementById('favBtn').className = inFav ? 'btn-outline active' : 'btn-outline';
+  document.getElementById('favBtnText').textContent = inFav ? 'V oblíbených' : 'Do oblíbených';
+}
+
+/* ══════════════════════════════════════════════════════
+   HISTORIE MODAL
+══════════════════════════════════════════════════════ */
+function openHistory() {
+  const h = getHistory(), f = getFavs(), c = document.getElementById('historyContent');
+  if (!h.length && !f.length) {
+    c.innerHTML = '<div class="history-empty">Zatím nic nesledováno</div>';
+  } else {
+    const render = a =>
+      `<div class="anime-card" onclick="closeHistory();openAnimeById(${a.id})">
+        <div class="card-poster"><img src="${a.cover || ''}" loading="lazy">
+          <div class="card-overlay"><div class="play-icon"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg></div></div>
+        </div>
+        <div class="card-title">${a.title}</div>
+      </div>`;
+    let html = '';
+    if (f.length) html += `<div style="margin-bottom:30px"><h3 style="color:var(--text-1);font-size:14px;margin-bottom:16px;">Oblíbené</h3><div class="history-grid">${f.slice(0, 12).map(render).join('')}</div></div>`;
+    if (h.length) html += `<div><h3 style="color:var(--text-1);font-size:14px;margin-bottom:16px;">Naposledy sledované</h3><div class="history-grid">${h.slice(0, 18).map(render).join('')}</div></div>`;
+    c.innerHTML = html;
+  }
+  document.getElementById('historyModal').classList.add('open');
+}
+async function openAnimeById(id) { closeHistory(); openAnime(await fetchAnimeDetail(id)); }
+function closeHistory() { document.getElementById('historyModal').classList.remove('open'); }
+
+/* ══════════════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════════════ */
+loadFilter('TRENDING');
+</script>
 </body>
 </html>
