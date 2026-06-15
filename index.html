@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AniStream</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.7/hls.min.js"></script>
+    
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="header">
+    <div class="header-inner">
+        <div class="logo" onclick="goHome()">
+            <div class="logo-dot"></div><span>AniStream</span>
+        </div>
+        <div class="search-wrap" id="searchWrap">
+            <svg class="search-icon" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+            <input type="text" id="searchInput" placeholder="Hledat anime…" autocomplete="off">
+            <div class="search-results" id="searchResults"></div>
+        </div>
+        <div class="header-right">
+            <button class="btn-icon ai-btn" onclick="openAiModal()">🤖 AI Doporučení</button>
+            <div class="notif-bell-wrap">
+                <button class="btn-icon" onclick="openNotifModal()" title="Upozornění">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                </button>
+                <div class="notif-dot" id="notifDot"></div>
+            </div>
+            <button class="btn-icon" onclick="openHistory()" title="Historie">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </button>
+            <button class="btn-icon" onclick="openConfig()" title="Nastavení">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            </button>
+        </div>
+    </div>
+</header>
+
+<main class="main" id="home-view">
+    <div class="hero" id="heroSection">
+        <div class="hero-bg" id="heroBg"></div>
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <span class="hero-tag">Nejsledovanější právě teď</span>
+            <h1 class="hero-title" id="heroTitle">—</h1>
+            <p class="hero-desc" id="heroDesc">—</p>
+            <button class="btn-play-hero" id="heroBtn">
+                <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg> Přehrát
+            </button>
+        </div>
+    </div>
+
+    <div class="top-filters-row">
+        <div class="filter-tabs" id="filterTabs">
+            <button class="filter-tab active" onclick="switchFilter(this,'TRENDING')">Trending</button>
+            <button class="filter-tab" onclick="switchFilter(this,'POPULAR')">Populární</button>
+            <button class="filter-tab" onclick="switchFilter(this,'TOP_RATED')">Top hodnocení</button>
+            <button class="filter-tab" onclick="switchFilter(this,'SEASONAL')">Tato sezona</button>
+        </div>
+        <button class="btn-advanced-filter" onclick="toggleAdvancedFilters()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg> Rozšířené filtry
+        </button>
+    </div>
+
+    <div class="advanced-filters-panel" id="advancedFilters">
+        <div class="filter-group">
+            <div class="filter-label">Řazení</div>
+            <div class="filter-pill-container" id="filterSort">
+                <button class="filter-pill active" data-val="TRENDING_DESC" onclick="togglePill(this, true)">Nejnovější / Trending</button>
+                <button class="filter-pill" data-val="SCORE_DESC" onclick="togglePill(this, true)">Hodnocení</button>
+                <button class="filter-pill" data-val="POPULARITY_DESC" onclick="togglePill(this, true)">Popularita</button>
+                <button class="filter-pill" data-val="TITLE_ENGLISH" onclick="togglePill(this, true)">A - Z</button>
+            </div>
+        </div>
+        <div class="filter-group">
+            <div class="filter-label">Rok vydání</div>
+            <input type="number" id="filterYear" class="filter-input" placeholder="Např. 2024">
+        </div>
+        <div class="filter-group">
+            <div class="filter-label">Status</div>
+            <div class="filter-pill-container" id="filterStatus">
+                <button class="filter-pill" data-val="RELEASING" onclick="togglePill(this, true, true)">Vysílané</button>
+                <button class="filter-pill" data-val="FINISHED" onclick="togglePill(this, true, true)">Ukončené</button>
+            </div>
+        </div>
+        <div class="filter-group" style="grid-column: 1 / -1;">
+            <div class="filter-label">Žánry (možno vybrat více)</div>
+            <div class="filter-pill-container" id="filterGenres">
+                <button class="filter-pill" data-val="Action" onclick="togglePill(this)">Action</button>
+                <button class="filter-pill" data-val="Adventure" onclick="togglePill(this)">Adventure</button>
+                <button class="filter-pill" data-val="Comedy" onclick="togglePill(this)">Comedy</button>
+                <button class="filter-pill" data-val="Drama" onclick="togglePill(this)">Drama</button>
+                <button class="filter-pill" data-val="Fantasy" onclick="togglePill(this)">Fantasy</button>
+                <button class="filter-pill" data-val="Horror" onclick="togglePill(this)">Horror</button>
+                <button class="filter-pill" data-val="Mystery" onclick="togglePill(this)">Mystery</button>
+                <button class="filter-pill" data-val="Psychological" onclick="togglePill(this)">Psychological</button>
+                <button class="filter-pill" data-val="Romance" onclick="togglePill(this)">Romance</button>
+                <button class="filter-pill" data-val="Sci-Fi" onclick="togglePill(this)">Sci-Fi</button>
+                <button class="filter-pill" data-val="Slice of Life" onclick="togglePill(this)">Slice of Life</button>
+                <button class="filter-pill" data-val="Sports" onclick="togglePill(this)">Sports</button>
+                <button class="filter-pill" data-val="Supernatural" onclick="togglePill(this)">Supernatural</button>
+            </div>
+        </div>
+        <button class="apply-filters-btn" onclick="applyAdvancedFilters()">Aplikovat filtr</button>
+    </div>
+    
+    <div class="section-label"><div class="dot"></div><h2 id="sectionTitle">Výběr</h2></div>
+    <div class="anime-grid" id="animeGrid"></div>
+    <div class="load-more-wrap"><button class="load-more-btn" id="loadMoreBtn" onclick="loadMore()">Načíst více</button></div>
+</main>
+
+<main class="main" id="player-view">
+    <button class="back-btn" onclick="goHome()">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg> Zpět na přehled
+    </button>
+    
+    <div class="detail-header" id="detailHeader">
+        <div class="detail-poster"><img id="detailPosterImg" src="" alt="Poster"></div>
+        <div class="detail-info">
+            <h1 class="detail-title" id="detailTitle">—</h1>
+            <div class="detail-meta" id="detailMeta"></div>
+            <div class="detail-desc" id="detailDesc">Načítám informace...</div>
+            <div class="detail-actions">
+                <button class="btn-primary" id="mainPlayBtn" onclick="playNextOrFirstEp()" disabled>
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg> <span id="mainPlayBtnText">Načítám...</span>
+                </button>
+                <button class="btn-outline" id="favBtn" onclick="toggleFav()">
+                    <span id="favBtnText">Do oblíbených</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="player-container" id="playerContainer">
+        <div class="player-wrap" id="playerWrap">
+            <div class="player-placeholder" id="playerPlaceholder">
+                <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+                <span>Připravuji stream...</span>
+            </div>
+        </div>
+
+        <div class="source-row" id="sourceRow" style="display:none">
+            <span class="source-label">Zdroj:</span>
+            <div id="sourceBtns" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"></div>
+            
+            <div id="fallbackControls" style="display:none; margin-left:auto; gap:8px; align-items:center;">
+                <span class="source-label" style="margin-right:4px;">Titulky:</span>
+                <button id="fbSubEn" class="source-btn active" onclick="setFallbackSub('en')">EN Orig.</button>
+                <button id="fbSubCz" class="source-btn" onclick="setFallbackSub('cs')">AI Překlad CZ</button>
+            </div>
+            
+            <div id="badgeContainer" style="margin-left:auto; display:flex; gap:6px;"></div>
+        </div>
+
+        <div class="nav-row">
+            <button class="nav-btn" id="prevEpBtn" onclick="navigateEp(-1)" disabled>
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg> Předchozí
+            </button>
+            <button class="nav-btn" id="watchedBtn" onclick="toggleWatched()" style="flex:0.5;background:transparent;">
+                <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            </button>
+            <button class="nav-btn" id="nextEpBtn" onclick="navigateEp(1)" disabled>
+                Další <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <div class="episodes-section">
+        <div class="episodes-header">
+            <div class="episodes-title">Seznam epizod</div>
+            <div class="season-tabs" id="seasonTabs" style="display:none"></div>
+        </div>
+        <ul class="ep-list-wide" id="epList">
+            <li style="color:var(--text-3);font-size:14px;padding:20px;text-align:center;">Načítám seznam...</li>
+        </ul>
+    </div>
+</main>
+
+<div class="modal-overlay" id="configModal" onclick="if(event.target===this)closeConfig()">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">⚙️ Nastavení</div>
+            <button class="modal-close" onclick="closeConfig()">✕</button>
+        </div>
+        <div class="config-field">
+            <label class="config-label">Výchozí zdroj</label>
+            <select id="cfgSource" class="config-input">
+                <option value="auto">Automaticky (nejlepší kvalita s CZ)</option>
+                <option value="voe">Voe</option>
+                <option value="doodstream">Doodstream</option>
+                <option value="streamtape">Streamtape</option>
+                <option value="vidmoly">Vidmoly</option>
+                <option value="mixdrop">Mixdrop</option>
+            </select>
+        </div>
+        <div class="config-field">
+            <label class="config-label">Cloudflare Worker URL</label>
+            <input class="config-input" type="text" id="cfgProxy" placeholder="https://anisteam.zitkatomik007.workers.dev">
+        </div>
+        <button class="btn-save" onclick="saveConfig()">Uložit nastavení</button>
+    </div>
+</div>
+
+<div class="modal-overlay" id="historyModal" onclick="if(event.target===this)closeHistory()">
+    <div class="modal" style="max-width:800px">
+        <div class="modal-header">
+            <div class="modal-title">Historie & Oblíbené</div>
+            <button class="modal-close" onclick="closeHistory()">✕</button>
+        </div>
+        <div id="historyContent" style="max-height:60vh;overflow-y:auto;padding-right:10px;"></div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="notifModal" onclick="if(event.target===this)closeNotifModal()">
+    <div class="modal">
+        <div class="modal-header">
+            <div class="modal-title">🔔 Nové epizody</div>
+            <button class="modal-close" onclick="closeNotifModal()">✕</button>
+        </div>
+        <div id="notifContent" style="max-height:60vh;overflow-y:auto;padding-right:10px;">
+            <div style="text-align:center;padding:20px;color:var(--text-3)">Načítám...</div>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="aiModal" onclick="if(event.target===this)closeAiModal()">
+    <div class="modal" style="max-width:700px">
+        <div class="modal-header">
+            <div class="modal-title">🤖 AI Doporučení</div>
+            <button class="modal-close" onclick="closeAiModal()">✕</button>
+        </div>
+        <div class="ai-status" id="aiStatus">Načítám historii a generuji... (Může trvat 10 vteřin)</div>
+        <div class="ai-results-grid" id="aiResults" style="max-height:55vh;overflow-y:auto;padding-right:10px;"></div>
+    </div>
+</div>
+
+<div class="toast" id="toast"><div class="toast-dot" id="toastDot"></div><span id="toastMsg"></span></div>
+
+<script src="script.js"></script>
+</body>
+</html>
